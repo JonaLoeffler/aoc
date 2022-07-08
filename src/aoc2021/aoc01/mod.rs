@@ -16,27 +16,14 @@ fn read() -> io::Result<Vec<i32>> {
 }
 
 fn count((i, n): (usize, &i32), numbers: &Vec<i32>) -> Option<bool> {
-    if i == 0 {
-        return None;
-    }
-
-    match numbers.get(i - 1) {
-        Some(n2) => {
-            if n > n2 {
-                Some(true)
-            } else {
-                None
-            }
-        }
-        None => None,
+    if numbers.get(i - 1)? < n {
+        Some(true)
+    } else {
+        None
     }
 }
 
 fn windows((i, n): (usize, &i32), numbers: &Vec<i32>) -> Option<i32> {
-    if i < 2 {
-        return None;
-    }
-
     let first = numbers.get(i - 1)?;
     let second = numbers.get(i - 2)?;
 
@@ -49,6 +36,7 @@ pub fn one() -> usize {
     numbers
         .iter()
         .enumerate()
+        .skip(1)
         .filter_map(|t| count(t, &numbers))
         .collect::<Vec<bool>>()
         .len()
@@ -60,12 +48,14 @@ pub fn two() -> usize {
     let windowed: Vec<i32> = numbers
         .iter()
         .enumerate()
+        .skip(2)
         .filter_map(|t| windows(t, &numbers))
         .collect();
 
     windowed
         .iter()
         .enumerate()
+        .skip(1)
         .filter_map(|t| count(t, &windowed))
         .collect::<Vec<bool>>()
         .len()
