@@ -1,18 +1,13 @@
 use parse_int::parse;
-use std::fs::File;
-use std::io::{self, prelude::*, BufReader};
 
-fn read() -> io::Result<Vec<i32>> {
-    let file = File::open("./src/aoc2021/aoc01/input")?;
-    let reader = BufReader::new(file);
+static INPUT: &'static str = include_str!("./input");
 
-    let result: Vec<i32> = reader
+fn read() -> Vec<i32> {
+    INPUT
         .lines()
-        .map(|line| parse::<i32>(&line.unwrap_or_default()))
+        .map(|line| parse::<i32>(&line))
         .filter_map(|line| line.ok())
-        .collect();
-
-    Ok(result)
+        .collect()
 }
 
 fn count((i, n): (usize, &i32), numbers: &Vec<i32>) -> Option<bool> {
@@ -31,7 +26,7 @@ fn windows((i, n): (usize, &i32), numbers: &Vec<i32>) -> Option<i32> {
 }
 
 pub fn one() -> usize {
-    let numbers = read().unwrap_or_default();
+    let numbers = read();
 
     numbers
         .iter()
@@ -43,7 +38,7 @@ pub fn one() -> usize {
 }
 
 pub fn two() -> usize {
-    let numbers = read().unwrap_or_default();
+    let numbers = read();
 
     let windowed: Vec<i32> = numbers
         .iter()
