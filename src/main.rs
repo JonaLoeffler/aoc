@@ -18,4 +18,9 @@ fn main() {
         aoc2021::aoc03::one(),
         aoc2021::aoc03::two()
     );
+    println!(
+        "2021-04: {} {}",
+        aoc2021::aoc04::one(),
+        aoc2021::aoc04::two()
+    );
 }
