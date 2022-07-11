@@ -97,3 +97,17 @@ pub fn two() -> i32 {
 
     oxygen * co2
 }
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_one() {
+        assert_eq!(4139586, super::one())
+    }
+
+    #[test]
+    fn test_two() {
+        assert_eq!(1800151, super::two())
+    }
+}

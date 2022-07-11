@@ -60,3 +60,17 @@ pub fn two() -> i32 {
 
     position * depth
 }
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_one() {
+        assert_eq!(1459206, super::one())
+    }
+
+    #[test]
+    fn test_two() {
+        assert_eq!(1320534480, super::two())
+    }
+}

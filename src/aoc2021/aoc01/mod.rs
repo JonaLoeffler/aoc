@@ -55,3 +55,17 @@ pub fn two() -> usize {
         .collect::<Vec<bool>>()
         .len()
 }
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_one() {
+        assert_eq!(1139, super::one())
+    }
+
+    #[test]
+    fn test_two() {
+        assert_eq!(1103, super::two())
+    }
+}
