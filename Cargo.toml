@@ -6,4 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+aocf = "0.1.18"
+getopts = "0.2.21"
 parse_int = "0.6.0"

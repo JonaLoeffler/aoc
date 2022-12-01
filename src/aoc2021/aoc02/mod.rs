@@ -36,7 +36,7 @@ fn read() -> Vec<Command> {
         .collect()
 }
 
-pub fn one() -> i32 {
+pub fn part1(input: String) -> Option<String> {
     let (position, depth) =
         read()
             .iter()
@@ -46,10 +46,10 @@ pub fn one() -> i32 {
                 Command::Up(value) => (position, depth - value),
             });
 
-    position * depth
+    Some((position * depth).to_string())
 }
 
-pub fn two() -> i32 {
+pub fn part2(input: String) -> Option<String> {
     let (position, depth, _) = read()
         .iter()
         .fold((0, 0, 0), |(position, depth, aim), command| match command {
@@ -58,19 +58,5 @@ pub fn two() -> i32 {
             Command::Up(value) => (position, depth, aim - value),
         });
 
-    position * depth
-}
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn test_one() {
-        assert_eq!(1459206, super::one())
-    }
-
-    #[test]
-    fn test_two() {
-        assert_eq!(1320534480, super::two())
-    }
+    Some((position * depth).to_string())
 }

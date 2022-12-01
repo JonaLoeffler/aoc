@@ -155,28 +155,14 @@ impl FromStr for Game {
     }
 }
 
-pub fn one() -> i32 {
+pub fn part1(input: String) -> Option<String> {
     let mut game = read();
 
-    game.run().unwrap().try_into().unwrap()
+    Some(game.run().unwrap().to_string())
 }
 
-pub fn two() -> i32 {
+pub fn part2(input: String) -> Option<String> {
     let mut game = read();
 
-    game.last().unwrap().try_into().unwrap()
-}
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn test_one() {
-        assert_eq!(69579, super::one())
-    }
-
-    #[test]
-    fn test_two() {
-        assert_eq!(14877, super::two())
-    }
+    Some(game.last().unwrap().to_string())
 }
