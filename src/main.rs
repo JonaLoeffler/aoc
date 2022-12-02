@@ -29,4 +29,9 @@ fn main() {
         aoc2022::aoc01::one(),
         aoc2022::aoc01::two()
     );
+    println!(
+        "2022-02: {} {}",
+        aoc2022::aoc02::one(),
+        aoc2022::aoc02::two()
+    );
 }
