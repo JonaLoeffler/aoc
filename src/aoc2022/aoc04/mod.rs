@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 static INPUT: &'static str = include_str!("./input");
 
 fn input() -> Vec<(i32, i32, i32, i32)> {
@@ -33,7 +31,8 @@ pub fn two() -> i32 {
         .filter(|(a, b, c, d)| {
             (a.clone()..=b.clone())
                 .filter(|x| (c..=d).contains(&x))
-                .next().is_some()
+                .next()
+                .is_some()
         })
         .count() as i32
 }
