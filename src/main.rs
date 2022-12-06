@@ -49,4 +49,9 @@ fn main() {
         aoc2022::aoc05::one(),
         aoc2022::aoc05::two()
     );
+    println!(
+        "2022-06: {} {}",
+        aoc2022::aoc06::one().unwrap(),
+        aoc2022::aoc06::two().unwrap()
+    );
 }
