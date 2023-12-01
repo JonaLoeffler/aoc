@@ -1,5 +1,6 @@
 mod aoc2021;
 mod aoc2022;
+mod aoc2023;
 
 fn main() {
     println!(
@@ -54,14 +55,19 @@ fn main() {
         aoc2022::aoc06::one().unwrap(),
         aoc2022::aoc06::two().unwrap()
     );
+    // println!(
+    //     "2022-07: {} {}",
+    //     aoc2022::aoc07::one().unwrap(),
+    //     aoc2022::aoc07::two().unwrap()
+    // );
+    // println!(
+    //     "2022-08: {} {}",
+    //     aoc2022::aoc08::one().unwrap(),
+    //     aoc2022::aoc08::two().unwrap()
+    // );
     println!(
-        "2022-07: {} {}",
-        aoc2022::aoc07::one().unwrap(),
-        aoc2022::aoc07::two().unwrap()
-    );
-    println!(
-        "2022-08: {} {}",
-        aoc2022::aoc08::one().unwrap(),
-        aoc2022::aoc08::two().unwrap()
+        "2023-01: {} {}",
+        aoc2023::aoc01::one().unwrap(),
+        aoc2023::aoc01::two().unwrap()
     );
 }
