@@ -27,6 +27,7 @@ fn concat_first_and_last(v: Vec<i32>) -> i32 {
         .unwrap()
 }
 
+#[allow(unused)]
 fn replace(str: &str) -> String {
     let mut str: String = str.to_owned();
 
