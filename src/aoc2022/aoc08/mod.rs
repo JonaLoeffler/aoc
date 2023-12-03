@@ -107,58 +107,58 @@ pub fn two() -> Option<String> {
     let rows = input.len();
     let cols = input.first().unwrap().len();
 
-    for line in &input {
-        println!("{:?}", line);
-    }
+    // for line in &input {
+        // println!("{:?}", line);
+    // }
 
     for i in 0..rows {
         for j in 0..cols {
-            println!("looking at point {:?}", (i, j));
+            // println!("looking at point {:?}", (i, j));
             let mut left = 0;
             let mut right = 0;
-            let mut top = 0;
-            let mut bottom = 0;
+            let top = 0;
+            let bottom = 0;
 
-            println!("{}", "---left---");
+            // println!("{}", "---left---");
             let highest = input.get(i).unwrap().get(j).unwrap();
             for k in (i + 1)..rows - 1 {
                 let next = input.get(k).unwrap().get(j).unwrap();
 
-                println!("next: {:?}", (k, j, next, highest));
+                // println!("next: {:?}", (k, j, next, highest));
 
                 if next >= highest {
-                    println!("{}", "breaking");
+                    // println!("{}", "breaking");
                     break;
                 } else {
-                    println!("{}", "incrementing");
+                    // println!("{}", "incrementing");
                     left += 1;
                 }
             }
 
-            println!("{}", "---right---");
+            // println!("{}", "---right---");
             let highest = input.get(i).unwrap().get(j).unwrap();
             for k in (0..i).rev() {
                 let next = input.get(k).unwrap().get(j).unwrap();
 
-                println!("next: {:?}", (k, j, next, highest));
+                // println!("next: {:?}", (k, j, next, highest));
 
                 if next >= highest {
-                    println!("{}", "breaking");
+                    // println!("{}", "breaking");
                     break;
                 } else {
-                    println!("{}", "incrementing");
+                    // println!("{}", "incrementing");
                     right += 1;
                 }
             }
 
-            println!("scores: {:?}", (left, right, bottom, top));
+            // println!("scores: {:?}", (left, right, bottom, top));
             *score.get_mut(i).unwrap().get_mut(j).unwrap() = left * right * top * bottom;
         }
     }
 
-    for line in &score {
-        println!("{:?}", line);
-    }
+    // for line in &score {
+        // println!("{:?}", line);
+    // }
 
     let highscore = score.iter().flatten().max().unwrap();
 
