@@ -52,22 +52,32 @@ fn main() {
     );
     println!(
         "2022-06: {} {}",
-        aoc2022::aoc06::one().unwrap(),
-        aoc2022::aoc06::two().unwrap()
+        aoc2022::aoc06::one().unwrap_or_default(),
+        aoc2022::aoc06::two().unwrap_or_default()
     );
-    // println!(
-    //     "2022-07: {} {}",
-    //     aoc2022::aoc07::one().unwrap(),
-    //     aoc2022::aoc07::two().unwrap()
-    // );
-    // println!(
-    //     "2022-08: {} {}",
-    //     aoc2022::aoc08::one().unwrap(),
-    //     aoc2022::aoc08::two().unwrap()
-    // );
+    println!(
+        "2022-07: {} {}",
+        aoc2022::aoc07::one().unwrap_or_default(),
+        aoc2022::aoc07::two().unwrap_or_default()
+    );
+    println!(
+        "2022-08: {} {}",
+        aoc2022::aoc08::one().unwrap_or_default(),
+        aoc2022::aoc08::two().unwrap_or_default()
+    );
+    println!(
+        "2022-08: {} {}",
+        aoc2022::aoc08::one().unwrap_or_default(),
+        aoc2022::aoc08::two().unwrap_or_default()
+    );
+    println!(
+        "2022-09: {} {}",
+        aoc2022::aoc09::one().unwrap_or_default(),
+        aoc2022::aoc09::two().unwrap_or_default()
+    );
     println!(
         "2023-01: {} {}",
-        aoc2023::aoc01::one().unwrap(),
-        aoc2023::aoc01::two().unwrap()
+        aoc2023::aoc01::one().unwrap_or_default(),
+        aoc2023::aoc01::two().unwrap_or_default()
     );
 }
