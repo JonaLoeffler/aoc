@@ -66,11 +66,6 @@ fn main() {
         aoc2022::aoc08::two().unwrap_or_default()
     );
     println!(
-        "2022-08: {} {}",
-        aoc2022::aoc08::one().unwrap_or_default(),
-        aoc2022::aoc08::two().unwrap_or_default()
-    );
-    println!(
         "2022-09: {} {}",
         aoc2022::aoc09::one().unwrap_or_default(),
         aoc2022::aoc09::two().unwrap_or_default()
@@ -79,5 +74,15 @@ fn main() {
         "2023-01: {} {}",
         aoc2023::aoc01::one().unwrap_or_default(),
         aoc2023::aoc01::two().unwrap_or_default()
+    );
+    println!(
+        "2023-02: {} {}",
+        aoc2023::aoc02::one().unwrap_or_default(),
+        aoc2023::aoc02::two().unwrap_or_default()
+    );
+    println!(
+        "2023-03: {} {}",
+        aoc2023::aoc03::one().unwrap_or_default(),
+        aoc2023::aoc03::two().unwrap_or_default()
     );
 }
