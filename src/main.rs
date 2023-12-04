@@ -85,4 +85,9 @@ fn main() {
         aoc2023::aoc03::one().unwrap_or_default(),
         aoc2023::aoc03::two().unwrap_or_default()
     );
+    println!(
+        "2023-04: {} {}",
+        aoc2023::aoc04::one().unwrap_or_default(),
+        aoc2023::aoc04::two().unwrap_or_default()
+    );
 }
