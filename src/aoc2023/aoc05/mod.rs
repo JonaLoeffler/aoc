@@ -109,7 +109,9 @@ pub fn one() -> Option<String> {
     Some(locations.iter().min()?.to_string())
 }
 
+#[allow(unreachable_code)]
 pub fn two() -> Option<String> {
+    return None;
     let (seeds, maps) = parse_two();
 
     let mut locations = Vec::new();
