@@ -1,11 +1,37 @@
-use std::collections::HashMap;
+use itertools::Itertools;
+use std::collections::{HashMap, HashSet};
 
 static INPUT: &'static str = include_str!("./input");
 
-#[derive(Eq, PartialEq, Ord, Debug)]
+#[derive(Eq, PartialEq, Hash, Ord, Clone, Copy)]
+struct Hand([Card; 5]);
+
+#[derive(Eq, PartialEq, Hash, Ord)]
 struct Play {
-    hand: (Card, Card, Card, Card, Card),
+    hand: Hand,
+    hand_with_joker: Hand,
     bid: i32,
+}
+
+impl std::fmt::Debug for Hand {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(
+            &self
+                .0
+                .map(|h| format!("{:?}", h).replace("C", ""))
+                .iter()
+                .join(""),
+        )
+    }
+}
+
+impl std::fmt::Debug for Play {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&format!(
+            "{:?}; ({:?}); {}",
+            self.hand, self.hand_with_joker, self.bid
+        ))
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -34,6 +60,29 @@ enum Card {
     C4,
     C3,
     C2,
+    // J,
+}
+
+impl Card {
+    pub fn iterator<'a>() -> std::iter::Copied<std::slice::Iter<'a, Card>> {
+        [
+            Card::A,
+            Card::K,
+            Card::Q,
+            Card::J,
+            Card::T,
+            Card::C9,
+            Card::C8,
+            Card::C7,
+            Card::C6,
+            Card::C5,
+            Card::C4,
+            Card::C3,
+            Card::C2,
+        ]
+        .iter()
+        .copied()
+    }
 }
 
 impl From<char> for Card {
@@ -57,18 +106,11 @@ impl From<char> for Card {
     }
 }
 
-impl Play {
+impl Hand {
     fn r#type(&self) -> Type {
-        let slice = [
-            self.hand.0,
-            self.hand.1,
-            self.hand.2,
-            self.hand.3,
-            self.hand.4,
-        ];
-
         let mut unique: HashMap<Card, i32> = HashMap::new();
-        for i in slice {
+
+        for i in self.0 {
             if let Some(entry) = unique.get_mut(&i) {
                 *entry += 1;
             } else {
@@ -79,40 +121,42 @@ impl Play {
         let max = unique.values().max().unwrap();
 
         match unique.len() {
-            5 => Type::HighCard,
-            4 => Type::OnePair,
-            3 if max == &2 => Type::TwoPair,
-            3 if max == &3 => Type::ThreeOfAKind,
-            2 if max == &3 => Type::FullHouse,
-            2 if max == &4 => Type::FourOfAKind,
             1 => Type::FiveOfAKind,
+            2 if max == &4 => Type::FourOfAKind,
+            2 if max == &3 => Type::FullHouse,
+            3 if max == &3 => Type::ThreeOfAKind,
+            3 if max == &2 => Type::TwoPair,
+            4 => Type::OnePair,
+            5 => Type::HighCard,
             _default => panic!(),
         }
     }
 }
 
+impl PartialOrd for Hand {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        for i in 0..5 {
+            if self.0[i] != other.0[i] {
+                return self.0[i].partial_cmp(&other.0[i]);
+            }
+        }
+
+        Some(std::cmp::Ordering::Equal)
+    }
+}
+
 impl PartialOrd for Play {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        let t1 = self.r#type();
-        let t2 = other.r#type();
+        // let t1 = self.hand_with_joker.r#type();
+        // let t2 = other.hand_with_joker.r#type();
+        let t1 = self.hand.r#type();
+        let t2 = other.hand.r#type();
 
         if t1 != t2 {
-            return t1.partial_cmp(&t2);
+            t1.partial_cmp(&t2)
+        } else {
+            self.hand.partial_cmp(&other.hand)
         }
-
-        if self.hand.0 != other.hand.0 {
-            return self.hand.0.partial_cmp(&other.hand.0);
-        } else if self.hand.1 != other.hand.1 {
-            return self.hand.1.partial_cmp(&other.hand.1);
-        } else if self.hand.2 != other.hand.2 {
-            return self.hand.2.partial_cmp(&other.hand.2);
-        } else if self.hand.3 != other.hand.3 {
-            return self.hand.3.partial_cmp(&other.hand.3);
-        } else if self.hand.4 != other.hand.4 {
-            return self.hand.4.partial_cmp(&other.hand.4);
-        }
-
-        return Some(std::cmp::Ordering::Equal);
     }
 }
 
@@ -125,19 +169,61 @@ fn parse() -> Vec<Play> {
             let hand = split.next().unwrap();
             let bid = split.next().unwrap();
 
-            Play {
-                hand: (
-                    hand.chars().nth(0).unwrap().into(),
-                    hand.chars().nth(1).unwrap().into(),
-                    hand.chars().nth(2).unwrap().into(),
-                    hand.chars().nth(3).unwrap().into(),
-                    hand.chars().nth(4).unwrap().into(),
-                ),
+            let hand = [
+                hand.chars().nth(0).unwrap().into(),
+                hand.chars().nth(1).unwrap().into(),
+                hand.chars().nth(2).unwrap().into(),
+                hand.chars().nth(3).unwrap().into(),
+                hand.chars().nth(4).unwrap().into(),
+            ];
 
+            Play {
+                hand: Hand(hand),
+                hand_with_joker: Hand(hand),
+                // hand_with_joker: apply_joker(&Hand(hand)),
                 bid: bid.parse::<i32>().unwrap(),
             }
         })
         .collect()
+}
+
+#[allow(unused)]
+fn apply_joker(hand: &Hand) -> Hand {
+    let mut options: HashSet<Play> = HashSet::new();
+
+    let joker_indices = hand
+        .0
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| c == &&Card::J)
+        .collect::<Vec<(usize, &Card)>>();
+
+    let replacements = (0..joker_indices.len())
+        .map(|_| Card::iterator())
+        .multi_cartesian_product();
+
+    for replacement in replacements {
+        let mut new = hand.0.clone();
+
+        for (i, (j, _)) in joker_indices.iter().enumerate() {
+            new[*j] = replacement.get(i).unwrap().clone();
+        }
+
+        options.insert(Play {
+            hand: Hand(new),
+            hand_with_joker: Hand(new),
+            bid: 0,
+        });
+    }
+
+    let mut options: Vec<Play> = options
+        .into_iter()
+        .filter(|h| !h.hand.0.iter().any(|c| c == &Card::J))
+        .collect();
+
+    options.sort();
+
+    options.first().map(|p| p.hand).unwrap_or(*hand)
 }
 
 pub fn one() -> Option<String> {
@@ -149,16 +235,15 @@ pub fn one() -> Option<String> {
         .iter()
         .rev()
         .enumerate()
-        .map(|(r, p)| {
-            // dbg!(r + 1, p, p.r#type());
-            (r + 1) as i32 * p.bid
-        })
+        .map(|(r, p)| (r + 1) as i32 * p.bid)
         .sum();
-    // dbg!(res);
 
     Some(res.to_string())
 }
 
 pub fn two() -> Option<String> {
+    // Move J to bottom
+    // Switch implementation of PartialOrd for Play
+    // Activate joker apply
     None
 }
