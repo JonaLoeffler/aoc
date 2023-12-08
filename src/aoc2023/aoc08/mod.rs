@@ -111,7 +111,7 @@ pub fn two() -> Option<String> {
         }
     }
 
-    Some(least.into_iter().reduce(|a, b| lcm(a, b))?.to_string())
+    Some(least.into_iter().reduce(lcm)?.to_string())
 }
 
 mod tests {}
