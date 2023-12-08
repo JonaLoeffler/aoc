@@ -4,16 +4,20 @@ use std::collections::{HashMap, HashSet};
 static INPUT: &'static str = include_str!("./input");
 
 #[derive(Eq, PartialEq, Hash, Ord, Clone, Copy)]
-struct Hand([Card; 5]);
+struct Hand<T: Card>([T; 5]);
 
 #[derive(Eq, PartialEq, Hash, Ord)]
-struct Play {
-    hand: Hand,
-    hand_with_joker: Hand,
+struct Play<T>
+where
+    T: Card,
+    Play<T>: PartialOrd,
+{
+    hand: Hand<T>,
+    hand_with_joker: Hand<T>,
     bid: i32,
 }
 
-impl std::fmt::Debug for Hand {
+impl<T: Card> std::fmt::Debug for Hand<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(
             &self
@@ -25,7 +29,10 @@ impl std::fmt::Debug for Hand {
     }
 }
 
-impl std::fmt::Debug for Play {
+impl<T: Card> std::fmt::Debug for Play<T>
+where
+    Play<T>: PartialOrd,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!(
             "{:?}; ({:?}); {}",
@@ -46,7 +53,7 @@ enum Type {
 }
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Clone, Copy)]
-enum Card {
+enum Card1 {
     A,
     K,
     Q,
@@ -60,55 +67,128 @@ enum Card {
     C4,
     C3,
     C2,
-    // J,
 }
 
-impl Card {
-    pub fn iterator<'a>() -> std::iter::Copied<std::slice::Iter<'a, Card>> {
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Clone, Copy)]
+enum Card2 {
+    A,
+    K,
+    Q,
+    T,
+    C9,
+    C8,
+    C7,
+    C6,
+    C5,
+    C4,
+    C3,
+    C2,
+    J,
+}
+
+trait Card:
+    From<char> + Ord + PartialOrd + std::fmt::Debug + std::hash::Hash + PartialEq + Eq + Clone + Copy
+{
+    fn joker() -> Self;
+    fn iterator<'a>() -> std::iter::Copied<std::slice::Iter<'a, Self>>;
+}
+
+impl Card for Card1 {
+    fn joker() -> Self {
+        Self::J
+    }
+
+    fn iterator<'a>() -> std::iter::Copied<std::slice::Iter<'a, Self>> {
         [
-            Card::A,
-            Card::K,
-            Card::Q,
-            Card::J,
-            Card::T,
-            Card::C9,
-            Card::C8,
-            Card::C7,
-            Card::C6,
-            Card::C5,
-            Card::C4,
-            Card::C3,
-            Card::C2,
+            Self::A,
+            Self::K,
+            Self::Q,
+            Self::J,
+            Self::T,
+            Self::C9,
+            Self::C8,
+            Self::C7,
+            Self::C6,
+            Self::C5,
+            Self::C4,
+            Self::C3,
+            Self::C2,
         ]
         .iter()
         .copied()
     }
 }
 
-impl From<char> for Card {
+impl Card for Card2 {
+    fn joker() -> Self {
+        Self::J
+    }
+
+    fn iterator<'a>() -> std::iter::Copied<std::slice::Iter<'a, Self>> {
+        [
+            Self::A,
+            Self::K,
+            Self::Q,
+            Self::J,
+            Self::T,
+            Self::C9,
+            Self::C8,
+            Self::C7,
+            Self::C6,
+            Self::C5,
+            Self::C4,
+            Self::C3,
+            Self::C2,
+        ]
+        .iter()
+        .copied()
+    }
+}
+
+impl From<char> for Card1 {
     fn from(value: char) -> Self {
         match value {
-            'A' => Card::A,
-            'K' => Card::K,
-            'Q' => Card::Q,
-            'J' => Card::J,
-            'T' => Card::T,
-            '9' => Card::C9,
-            '8' => Card::C8,
-            '7' => Card::C7,
-            '6' => Card::C6,
-            '5' => Card::C5,
-            '4' => Card::C4,
-            '3' => Card::C3,
-            '2' => Card::C2,
+            'A' => Card1::A,
+            'K' => Card1::K,
+            'Q' => Card1::Q,
+            'J' => Card1::J,
+            'T' => Card1::T,
+            '9' => Card1::C9,
+            '8' => Card1::C8,
+            '7' => Card1::C7,
+            '6' => Card1::C6,
+            '5' => Card1::C5,
+            '4' => Card1::C4,
+            '3' => Card1::C3,
+            '2' => Card1::C2,
+            _default => panic!(),
+        }
+    }
+}
+impl From<char> for Card2 {
+    fn from(value: char) -> Self {
+        match value {
+            'A' => Card2::A,
+            'K' => Card2::K,
+            'Q' => Card2::Q,
+            'J' => Card2::J,
+            'T' => Card2::T,
+            '9' => Card2::C9,
+            '8' => Card2::C8,
+            '7' => Card2::C7,
+            '6' => Card2::C6,
+            '5' => Card2::C5,
+            '4' => Card2::C4,
+            '3' => Card2::C3,
+            '2' => Card2::C2,
             _default => panic!(),
         }
     }
 }
 
-impl Hand {
+impl<T: Card> Hand<T> {
     fn r#type(&self) -> Type {
-        let mut unique: HashMap<Card, i32> = HashMap::new();
+        let mut unique: HashMap<T, i32> = HashMap::new();
 
         for i in self.0 {
             if let Some(entry) = unique.get_mut(&i) {
@@ -133,7 +213,7 @@ impl Hand {
     }
 }
 
-impl PartialOrd for Hand {
+impl<T: Card> PartialOrd for Hand<T> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         for i in 0..5 {
             if self.0[i] != other.0[i] {
@@ -145,10 +225,8 @@ impl PartialOrd for Hand {
     }
 }
 
-impl PartialOrd for Play {
+impl PartialOrd for Play<Card1> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        // let t1 = self.hand_with_joker.r#type();
-        // let t2 = other.hand_with_joker.r#type();
         let t1 = self.hand.r#type();
         let t2 = other.hand.r#type();
 
@@ -160,7 +238,61 @@ impl PartialOrd for Play {
     }
 }
 
-fn parse() -> Vec<Play> {
+impl PartialOrd for Play<Card2> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        let t1 = self.hand_with_joker.r#type();
+        let t2 = other.hand_with_joker.r#type();
+
+        if t1 != t2 {
+            t1.partial_cmp(&t2)
+        } else {
+            self.hand.partial_cmp(&other.hand)
+        }
+    }
+}
+
+#[allow(unused)]
+fn apply_joker<T>(hand: &Hand<T>) -> Hand<T>
+where
+    T: Card,
+    Play<T>: PartialOrd,
+{
+    let mut options: HashSet<Play<T>> = HashSet::new();
+
+    let joker_indices = hand
+        .0
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| c == &&T::joker())
+        .collect::<Vec<(usize, &T)>>();
+
+    let replacements = (0..joker_indices.len())
+        .map(|_| T::iterator())
+        .multi_cartesian_product();
+
+    for replacement in replacements {
+        let mut new = hand.0.clone();
+
+        for (i, (j, _)) in joker_indices.iter().enumerate() {
+            new[*j] = replacement.get(i).unwrap().clone();
+        }
+
+        options.insert(Play {
+            hand: Hand(new),
+            hand_with_joker: Hand(new),
+            bid: 0,
+        });
+    }
+
+    let mut options: Vec<Play<T>> = options
+        .into_iter()
+        .filter(|h| !h.hand.0.iter().any(|c| c == &T::joker()))
+        .collect();
+
+    options.iter().max().map(|p| p.hand).unwrap_or(*hand)
+}
+
+fn parse1() -> Vec<Play<Card1>> {
     INPUT
         .lines()
         .map(|l| {
@@ -180,54 +312,50 @@ fn parse() -> Vec<Play> {
             Play {
                 hand: Hand(hand),
                 hand_with_joker: Hand(hand),
-                // hand_with_joker: apply_joker(&Hand(hand)),
                 bid: bid.parse::<i32>().unwrap(),
             }
         })
         .collect()
 }
 
-#[allow(unused)]
-fn apply_joker(hand: &Hand) -> Hand {
-    let mut options: HashSet<Play> = HashSet::new();
+fn parse2() -> Vec<Play<Card2>> {
+    parse1().into_iter().map(|p| p.into()).collect()
+}
 
-    let joker_indices = hand
-        .0
-        .iter()
-        .enumerate()
-        .filter(|(_, c)| c == &&Card::J)
-        .collect::<Vec<(usize, &Card)>>();
-
-    let replacements = (0..joker_indices.len())
-        .map(|_| Card::iterator())
-        .multi_cartesian_product();
-
-    for replacement in replacements {
-        let mut new = hand.0.clone();
-
-        for (i, (j, _)) in joker_indices.iter().enumerate() {
-            new[*j] = replacement.get(i).unwrap().clone();
+impl From<Card1> for Card2 {
+    fn from(value: Card1) -> Self {
+        match value {
+            Card1::A => Card2::A,
+            Card1::K => Card2::K,
+            Card1::Q => Card2::Q,
+            Card1::J => Card2::J,
+            Card1::T => Card2::T,
+            Card1::C9 => Card2::C9,
+            Card1::C8 => Card2::C8,
+            Card1::C7 => Card2::C7,
+            Card1::C6 => Card2::C6,
+            Card1::C5 => Card2::C5,
+            Card1::C4 => Card2::C4,
+            Card1::C3 => Card2::C3,
+            Card1::C2 => Card2::C2,
         }
-
-        options.insert(Play {
-            hand: Hand(new),
-            hand_with_joker: Hand(new),
-            bid: 0,
-        });
     }
+}
 
-    let mut options: Vec<Play> = options
-        .into_iter()
-        .filter(|h| !h.hand.0.iter().any(|c| c == &Card::J))
-        .collect();
+impl From<Play<Card1>> for Play<Card2> {
+    fn from(value: Play<Card1>) -> Self {
+        let new: Hand<Card2> = Hand(value.hand.0.map(|c| c.into()));
 
-    options.sort();
-
-    options.first().map(|p| p.hand).unwrap_or(*hand)
+        Play {
+            hand: new,
+            hand_with_joker: apply_joker(&new),
+            bid: value.bid,
+        }
+    }
 }
 
 pub fn one() -> Option<String> {
-    let mut inputs = parse();
+    let mut inputs: Vec<Play<Card1>> = parse1();
 
     inputs.sort();
 
@@ -242,8 +370,16 @@ pub fn one() -> Option<String> {
 }
 
 pub fn two() -> Option<String> {
-    // Move J to bottom
-    // Switch implementation of PartialOrd for Play
-    // Activate joker apply
-    None
+    let mut inputs: Vec<Play<Card2>> = parse2();
+
+    inputs.sort();
+
+    let res: i32 = inputs
+        .iter()
+        .rev()
+        .enumerate()
+        .map(|(r, p)| (r + 1) as i32 * p.bid)
+        .sum();
+
+    Some(res.to_string())
 }
