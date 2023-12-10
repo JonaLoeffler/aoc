@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-static INPUT: &'static str = include_str!("./example");
+static INPUT: &'static str = include_str!("./input");
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 struct Node {
@@ -107,11 +107,7 @@ fn visited(nodes: HashMap<Node, i32>) -> Vec<Vec<char>> {
 pub fn one() -> Option<String> {
     let (start, next) = parse();
 
-    let mut distances: HashMap<Node, i32> = next
-        .keys()
-        .cloned()
-        .map(|k| (k.clone(), i32::MAX))
-        .collect();
+    let mut distances = HashMap::new();
 
     distances.insert(start.clone(), 0);
 
@@ -140,11 +136,7 @@ pub fn one() -> Option<String> {
 pub fn two() -> Option<String> {
     let (start, next) = parse();
 
-    let mut distances: HashMap<Node, i32> = next
-        .keys()
-        .cloned()
-        .map(|k| (k.clone(), i32::MAX))
-        .collect();
+    let mut distances = HashMap::new();
 
     distances.insert(start.clone(), 0);
 
@@ -164,6 +156,7 @@ pub fn two() -> Option<String> {
     }
 
     let mut inner = visited(distances.clone());
+    // print(&inner);
 
     // Iterator over rows
     for (row, line) in inner.clone().iter().enumerate() {
@@ -171,43 +164,82 @@ pub fn two() -> Option<String> {
             let range = &line[0..col];
             let is_inside = range.iter().filter(|c| c == &&'X').count() % 2 == 1;
 
-            if is_inside && char == &'.' {
+            let last_x_index = line
+                .iter()
+                .enumerate()
+                .filter(|(_, c)| c == &&'X')
+                .last()
+                .unwrap_or((0, &'X'))
+                .0;
+
+            if is_inside && char != &'X' && col < last_x_index {
                 let n = inner.get_mut(row).unwrap().get_mut(col).unwrap();
                 *n = 'I';
             }
         }
     }
 
+    let mut transposed: Vec<Vec<char>> = (0..inner[0].len())
+        .map(|i| {
+            inner
+                .iter()
+                .map(|inn| inn[i].clone())
+                .collect::<Vec<char>>()
+        })
+        .collect();
+
     // iterate over cols
-    for (row, line) in inner.clone().iter().enumerate() {
+    for (row, line) in transposed.clone().iter().enumerate() {
         for (col, char) in line.iter().enumerate() {
             let range = &line[0..col];
             let is_inside = range.iter().filter(|c| c == &&'X').count() % 2 == 1;
 
-            if is_inside && char == &'.' {
-                let n = inner.get_mut(row).unwrap().get_mut(col).unwrap();
+            let last_x_index = line
+                .iter()
+                .enumerate()
+                .filter(|(_, c)| c == &&'X')
+                .last()
+                .unwrap_or((0, &'X'))
+                .0;
+
+            if is_inside && char != &'X' && col < last_x_index {
+                let n = transposed.get_mut(row).unwrap().get_mut(col).unwrap();
                 *n = 'I';
             }
         }
     }
 
-    // println!(
-    //     "{}\n",
-    //     inner
-    //         .iter()
-    //         .map(|l| l.iter().map(|c| c.to_string()).collect::<Vec<String>>())
-    //         .map(|l| l.join(""))
-    //         .collect::<Vec<String>>()
-    //         .join("\n")
-    // );
+    // print(&inner);
+    // print(&transposed);
 
     Some(
-        inner
+        transposed
             .iter()
-            .map(|r| r.iter().filter(|c| c == &&'I').count())
+            .skip(1)
+            .take(transposed.len() - 2)
+            .map(|r| {
+                r.iter()
+                    .skip(1)
+                    .take(r.len() - 2)
+                    .filter(|c| c == &&'I')
+                    .count()
+            })
             .sum::<usize>()
             .to_string(),
     )
+}
+
+#[allow(unused)]
+fn print(inner: &Vec<Vec<char>>) {
+    println!(
+        "{}\n",
+        inner
+            .iter()
+            .map(|l| l.iter().map(|c| c.to_string()).collect::<Vec<String>>())
+            .map(|l| l.join(""))
+            .collect::<Vec<String>>()
+            .join("\n")
+    );
 }
 
 mod tests {}
