@@ -102,4 +102,5 @@ fn main() {
     print("2023-07", run(aoc2023::aoc07::one, aoc2023::aoc07::two));
     print("2023-08", run(aoc2023::aoc08::one, aoc2023::aoc08::two));
     print("2023-09", run(aoc2023::aoc09::one, aoc2023::aoc09::two));
+    print("2023-10", run(aoc2023::aoc10::one, aoc2023::aoc10::two));
 }
