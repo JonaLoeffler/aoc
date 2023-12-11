@@ -98,7 +98,7 @@ fn visited(nodes: HashMap<Node, i32>) -> Vec<Vec<char>> {
 
     for (node, _) in nodes {
         let n = out.get_mut(node.row).unwrap().get_mut(node.col).unwrap();
-        *n = 'X';
+        *n = node.char;
     }
 
     out
@@ -159,74 +159,103 @@ pub fn two() -> Option<String> {
     // print(&inner);
 
     // Iterator over rows
-    for (row, line) in inner.clone().iter().enumerate() {
-        for (col, char) in line.iter().enumerate() {
-            let range = &line[0..col];
-            let is_inside = range.iter().filter(|c| c == &&'X').count() % 2 == 1;
+    inner = inner.iter().map(fill_inner).collect();
 
-            let last_x_index = line
-                .iter()
-                .enumerate()
-                .filter(|(_, c)| c == &&'X')
-                .last()
-                .unwrap_or((0, &'X'))
-                .0;
+    let mut transposed = transpose(visited(distances.clone()).clone());
 
-            if is_inside && char != &'X' && col < last_x_index {
-                let n = inner.get_mut(row).unwrap().get_mut(col).unwrap();
-                *n = 'I';
-            }
-        }
-    }
+    // iterate over cols
+    transposed = transposed.iter().map(fill_inner).collect();
+    transposed = transpose(transposed.clone());
 
-    let mut transposed: Vec<Vec<char>> = (0..inner[0].len())
+    // print(&inner);
+    // print(&transposed);
+
+    let mut both: Vec<Vec<char>> = inner
+        .iter()
+        .zip(transposed.iter())
+        .map(|(il, tl)| {
+            il.iter()
+                .zip(tl.iter())
+                .map(|(ic, tc)| match (ic, tc) {
+                    ('I', 'I') => 'I',
+                    ('I', _) => '.',
+                    (_, 'I') => '.',
+                    _ => ic.to_owned(),
+                })
+                .collect()
+        })
+        .map(replace_outer)
+        .collect();
+
+    both = transpose(transpose(both).into_iter().map(replace_outer).collect());
+
+    // print(&both);
+
+    Some(
+        both.iter()
+            .map(|r| r.iter().filter(|c| c == &&'I').count())
+            .sum::<usize>()
+            .to_string(),
+    )
+}
+
+fn transpose(inner: Vec<Vec<char>>) -> Vec<Vec<char>> {
+    (0..inner[0].len())
         .map(|i| {
             inner
                 .iter()
                 .map(|inn| inn[i].clone())
                 .collect::<Vec<char>>()
         })
-        .collect();
+        .collect()
+}
 
-    // iterate over cols
-    for (row, line) in transposed.clone().iter().enumerate() {
-        for (col, char) in line.iter().enumerate() {
-            let range = &line[0..col];
-            let is_inside = range.iter().filter(|c| c == &&'X').count() % 2 == 1;
+fn fill_inner(line: &Vec<char>) -> Vec<char> {
+    let mut is_inside = false;
+
+    line.iter()
+        .enumerate()
+        .map(|(col, char)| {
+            let change = vec!['|', '-', 'L', 'F', 'J', '7'];
+            let prev = line
+                .get((col as i32 - 1).try_into().unwrap_or(100000))
+                .unwrap_or(&'X');
+
+            if change.contains(prev) && char == &'.' {
+                is_inside = !is_inside;
+            } else if change.contains(char) {
+                is_inside = false;
+            }
 
             let last_x_index = line
                 .iter()
                 .enumerate()
-                .filter(|(_, c)| c == &&'X')
+                .filter(|(_, c)| c != &&'.')
                 .last()
-                .unwrap_or((0, &'X'))
+                .unwrap_or((0, &'.'))
                 .0;
 
-            if is_inside && char != &'X' && col < last_x_index {
-                let n = transposed.get_mut(row).unwrap().get_mut(col).unwrap();
-                *n = 'I';
+            if is_inside && char == &'.' && col < last_x_index {
+                'I'
+            } else {
+                *char
             }
-        }
+        })
+        .collect()
+}
+
+fn replace_outer(l: Vec<char>) -> Vec<char> {
+    let mut line: String = l.iter().collect();
+
+    while line.contains("I.") {
+        line = line.replace("I.", "..");
     }
 
-    // print(&inner);
-    // print(&transposed);
+    while line.contains(".I") {
+        line = line.replace(".I", "..");
+    }
 
-    Some(
-        transposed
-            .iter()
-            .skip(1)
-            .take(transposed.len() - 2)
-            .map(|r| {
-                r.iter()
-                    .skip(1)
-                    .take(r.len() - 2)
-                    .filter(|c| c == &&'I')
-                    .count()
-            })
-            .sum::<usize>()
-            .to_string(),
-    )
+    line.chars().collect()
 }
 
 #[allow(unused)]
@@ -236,10 +265,32 @@ fn print(inner: &Vec<Vec<char>>) {
         inner
             .iter()
             .map(|l| l.iter().map(|c| c.to_string()).collect::<Vec<String>>())
-            .map(|l| l.join(""))
+            //
+            .map(|l| l
+                .join("")
+                .replace("-", "─")
+                .replace("|", "│")
+                .replace("F", "╭")
+                .replace("7", "╮")
+                .replace("L", "╰")
+                .replace("J", "╯"))
             .collect::<Vec<String>>()
             .join("\n")
     );
 }
 
-mod tests {}
+mod tests {
+    #[test]
+    fn test_fill_inner() {
+        let res = super::fill_inner(&".7|L.FL.FL-.".chars().collect());
+
+        assert_eq!(res, ".7|LIFLIFL-.".chars().collect::<Vec<char>>())
+    }
+
+    #[test]
+    fn test_replace_outer() {
+        let res = super::replace_outer(".......................L-7L-J|||F-JFJFJL7F--JF7F7L7LJ.LJLJI||..IF7F7I||FJ|FJFJ||ILJ||F--J|F-J|FJF7F7|ILJF7....L7L-7...........................".chars().collect());
+
+        assert_eq!(res, ".......................L-7L-J|||F-JFJFJL7F--JF7F7L7LJ.LJLJI||...F7F7I||FJ|FJFJ||ILJ||F--J|F-J|FJF7F7|ILJF7....L7L-7...........................".chars().collect::<Vec<char>>());
+    }
+}
