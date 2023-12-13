@@ -1,3 +1,4 @@
+#![feature(iter_map_windows)]
 use std::time::{Duration, Instant};
 
 mod aoc2021;
@@ -105,4 +106,5 @@ fn main() {
     print("2023-10", run(aoc2023::aoc10::one, aoc2023::aoc10::two));
     print("2023-11", run(aoc2023::aoc11::one, aoc2023::aoc11::two));
     print("2023-12", run(aoc2023::aoc12::one, aoc2023::aoc12::two));
+    print("2023-13", run(aoc2023::aoc13::one, aoc2023::aoc13::two));
 }
