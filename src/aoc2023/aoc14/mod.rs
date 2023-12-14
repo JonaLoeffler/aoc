@@ -29,7 +29,7 @@ fn transpose(inner: &Vec<Vec<char>>) -> Vec<Vec<char>> {
 fn slide_right(s: String) -> String {
     let mut s = s;
     while s.contains("O.") {
-        s = s.replacen("O.", ".O", 1);
+        s = s.replace("O.", ".O");
     }
     s
 }
@@ -52,11 +52,10 @@ fn weight(grid: &Vec<String>) -> usize {
 
 pub fn two() -> Option<String> {
     let mut grid = parse();
-    let mut initial = grid.clone();
 
     let mut grids: HashMap<Vec<String>, usize> = HashMap::new();
 
-    let full_iterations = 1000000000;
+    let full_iterations = 1_000_000_000;
 
     for i in 0..full_iterations {
         grid = grid_after_full_iteration(grid);
@@ -64,11 +63,11 @@ pub fn two() -> Option<String> {
         if let Some(o) = grids.get(&grid) {
             let remaining = (full_iterations - i) % (i - o);
 
-            for _ in 0..(i + remaining) {
-                initial = grid_after_full_iteration(initial);
+            for _ in 1..remaining {
+                grid = grid_after_full_iteration(grid);
             }
 
-            return Some(weight(&initial).to_string());
+            return Some(weight(&grid).to_string());
         } else {
             grids.insert(grid.clone(), i);
         }
