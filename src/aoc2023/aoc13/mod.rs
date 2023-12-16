@@ -49,6 +49,12 @@ fn find_reflection(pattern: &Vec<Vec<char>>) -> Option<usize> {
     r?
 }
 
+// walk through all possible smudges, remove, check if new different mirror line
+// Exclude previous reflection
+fn remove_smudge() {
+    todo!()
+}
+
 pub fn one() -> Option<String> {
     Some(
         parse()
