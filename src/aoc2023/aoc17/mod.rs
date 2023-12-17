@@ -1,15 +1,16 @@
-use std::collections::HashMap;
+use std::cmp::Reverse;
+use std::collections::{BinaryHeap, HashMap};
 
-static INPUT: &'static str = include_str!("./example");
+static INPUT: &'static str = include_str!("./input");
 
-#[derive(PartialEq, Eq, Debug, Clone, Hash)]
+#[derive(PartialEq, Eq, Debug, Clone, Hash, Ord, PartialOrd)]
 struct Node {
     row: i32,
     col: i32,
     loss: i32,
 }
 
-#[derive(PartialEq, Eq, Debug, Clone, Hash)]
+#[derive(PartialEq, Eq, Debug, Clone, Hash, Ord, PartialOrd)]
 enum Dir {
     R,
     L,
@@ -17,7 +18,7 @@ enum Dir {
     D,
 }
 
-#[derive(PartialEq, Eq, Debug, Clone, Hash)]
+#[derive(PartialEq, Eq, Debug, Clone, Hash, Ord, PartialOrd)]
 struct Position {
     node: Node,
     dir: Dir,
@@ -42,7 +43,7 @@ fn parse() -> Vec<Node> {
 }
 
 fn next(pos: &Position, nodes: &Vec<Node>) -> Vec<Position> {
-    let res = vec![
+    vec![
         (pos.node.row, pos.node.col + 1, Dir::R),
         (pos.node.row, pos.node.col - 1, Dir::L),
         (pos.node.row - 1, pos.node.col, Dir::U),
@@ -83,9 +84,7 @@ fn next(pos: &Position, nodes: &Vec<Node>) -> Vec<Position> {
             straight: if dir == pos.dir { pos.straight + 1 } else { 1 },
         })
     })
-    .collect();
-
-    res
+    .collect()
 }
 
 pub fn one() -> Option<String> {
@@ -104,86 +103,98 @@ pub fn one() -> Option<String> {
 
     let goal = nodes.last().unwrap().clone();
 
-    let mut losses = HashMap::new();
-    losses.insert(startr.node.clone(), 0);
-    losses.insert(startd.node.clone(), 0);
+    let mut losses: HashMap<Position, i32> = HashMap::new();
+    losses.insert(startr.clone(), 0);
+    losses.insert(startd.clone(), 0);
 
-    let mut prev: HashMap<Position, Position> = HashMap::new();
+    // let mut prev: HashMap<Position, Position> = HashMap::new();
 
-    // Problem: Dijkstra may not work?
-    let mut to_visit = vec![startr.clone(), startd.clone()];
+    let mut to_visit: BinaryHeap<Reverse<(i32, Position)>> = BinaryHeap::new();
+    to_visit.push(Reverse((0, startr)));
+    to_visit.push(Reverse((0, startd)));
 
-    while let Some(current) = to_visit.pop() {
-        let current_loss = losses.get(&current.node).unwrap_or(&i32::MAX).clone();
+    while let Some(Reverse((curr_cost, current))) = to_visit.pop() {
+        if current.node == goal {
+            break;
+        }
+
+        let current_loss = losses.get(&current).unwrap_or(&i32::MAX).clone();
+
+        if curr_cost > current_loss {
+            continue;
+        }
 
         for next in next(&current, &nodes) {
-            let next_loss = losses.get(&next.node).unwrap_or(&i32::MAX);
+            let next_loss = losses.get(&next).unwrap_or(&i32::MAX);
 
-            if current_loss + next.node.loss < *next_loss {
-                losses.insert(next.node.clone(), current_loss + next.node.loss);
-                to_visit.push(next.clone());
-                prev.insert(next.clone(), current.clone());
-                print(path_for(&next.node, &prev));
+            let loss = current_loss + next.node.loss;
+            if loss < *next_loss {
+                losses.insert(next.clone(), loss);
+                to_visit.push(Reverse((loss, next.clone())));
+                // prev.insert(next.clone(), current.clone());
             }
         }
     }
 
-    let path = path_for(&goal, &prev);
-    dbg!(path.iter().map(|p| p.node.loss).sum::<i32>());
-    print(path);
+    // let path = path_for(&goal, &prev);
+    // dbg!(path.iter().map(|p| p.node.loss).sum::<i32>());
+    // print(path);
 
     Some(
         losses
             .into_iter()
-            .find(|(p, _)| p == &goal)
-            .unwrap()
-            .1
+            .filter(|(p, _)| p.node == goal)
+            .map(|l| l.1)
+            .min()?
             .to_string(),
     )
 }
 
-fn path_for(node: &Node, prev: &HashMap<Position, Position>) -> Vec<Position> {
-    let mut current = prev.keys().find(|k| k.node == *node).unwrap();
+// fn path_for(node: &Node, prev: &HashMap<Position, Position>) -> Vec<Position> {
+//     let reach_goal: Vec<Position> = prev.keys().cloned().filter(|k| k.node == *node).collect();
+//     dbg!(&reach_goal);
 
-    let mut path: Vec<Position> = vec![current.clone()];
+//     let mut current = reach_goal.first().unwrap();
 
-    while let Some(p) = prev.get(current) {
-        current = p;
-        path.push(p.clone());
-    }
+//     let mut path: Vec<Position> = vec![current.clone()];
 
-    path.into_iter().rev().skip(1).rev().collect()
-}
+//     while let Some(p) = prev.get(current) {
+//         current = p;
+//         path.push(p.clone());
+//     }
 
-fn print(path: Vec<Position>) {
-    let height = 13;
-    let width = 13;
+//     path.into_iter().rev().skip(1).rev().collect()
+// }
 
-    let rows = (0..height)
-        .map(|r| {
-            let row = (0..width)
-                .map(|c| {
-                    if let Some(pos) = path.iter().find(|p| p.node.row == r && p.node.col == c) {
-                        pos.node.loss.to_string().chars().nth(0).unwrap()
-                        // pos.straight.to_string().chars().nth(0).unwrap()
-                        // match pos.dir {
-                        //     Dir::R => '>',
-                        //     Dir::L => '<',
-                        //     Dir::U => '^',
-                        //     Dir::D => 'v',
-                        // }
-                    } else {
-                        '.'
-                    }
-                })
-                .collect::<String>();
+// fn print(path: Vec<Position>) {
+//     let height = 13;
+//     let width = 13;
 
-            row
-        })
-        .collect::<Vec<String>>();
+//     let rows = (0..height)
+//         .map(|r| {
+//             let row = (0..width)
+//                 .map(|c| {
+//                     if let Some(pos) = path.iter().find(|p| p.node.row == r && p.node.col == c) {
+//                         // pos.node.loss.to_string().chars().nth(0).unwrap()
+//                         // pos.straight.to_string().chars().nth(0).unwrap()
+//                         match pos.dir {
+//                             Dir::R => '>',
+//                             Dir::L => '<',
+//                             Dir::U => '^',
+//                             Dir::D => 'v',
+//                         }
+//                     } else {
+//                         '.'
+//                     }
+//                 })
+//                 .collect::<String>();
 
-    dbg!(rows);
-}
+//             row
+//         })
+//         .collect::<Vec<String>>();
+
+//     dbg!(rows);
+// }
 
 pub fn two() -> Option<String> {
     None
