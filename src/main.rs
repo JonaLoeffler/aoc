@@ -134,6 +134,7 @@ fn main() {
             15 => print("2023-15", run(aoc2023::aoc15::one, aoc2023::aoc15::two)),
             16 => print("2023-16", run(aoc2023::aoc16::one, aoc2023::aoc16::two)),
             17 => print("2023-17", run(aoc2023::aoc17::one, aoc2023::aoc17::two)),
+            18 => print("2023-18", run(aoc2023::aoc18::one, aoc2023::aoc18::two)),
             d => println!("Cannot execute day {}", d),
         },
         y => println!("Cannot execute year {}", y),
