@@ -1,10 +1,35 @@
-use std::thread;
+use std::{collections::HashMap, thread};
 
-static INPUT: &'static str = include_str!("./input");
+static INPUT: &'static str = include_str!("./example");
 
 type Color = String;
+type Grid = HashMap<(i32, i32), State>;
 
-fn parse() -> Vec<(char, usize, Color)> {
+fn parse2() -> Vec<(char, i32, Color)> {
+    INPUT
+        .lines()
+        .map(|l| {
+            let mut split = l.split(" ");
+
+            let col = split.nth(2).unwrap().replace(")", "").replace("(", "");
+
+            let dir = match col.chars().last().unwrap() {
+                '0' => 'R',
+                '1' => 'D',
+                '2' => 'L',
+                '3' => 'U',
+                s => panic!("unexpected last {s}"),
+            };
+
+            let len = i32::from_str_radix(&col.chars().skip(1).take(5).collect::<String>(), 16)
+                .expect("parse");
+
+            (dir, len, col)
+        })
+        .collect()
+}
+
+fn parse1() -> Vec<(char, i32, Color)> {
     INPUT
         .lines()
         .map(|l| {
@@ -12,7 +37,7 @@ fn parse() -> Vec<(char, usize, Color)> {
 
             let dir = split.next().unwrap().chars().nth(0).unwrap();
 
-            let len = split.next().unwrap().parse::<usize>().unwrap();
+            let len = split.next().unwrap().parse::<i32>().unwrap();
 
             let col = split.next().unwrap().replace(")", "").replace("(", "");
 
@@ -21,29 +46,111 @@ fn parse() -> Vec<(char, usize, Color)> {
         .collect()
 }
 
-#[derive(Debug)]
-enum Tile {
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum State {
     Dirt,
     Hole(Color),
-    Outside,
+    Inside,
 }
 
-#[allow(dead_code)]
-fn print(grid: &Vec<Vec<Tile>>) {
-    let g = grid
-        .iter()
-        .map(|line| {
-            line.iter()
-                .map(|t| match t {
-                    Tile::Dirt => '.',
-                    Tile::Hole(_) => '#',
-                    Tile::Outside => '_',
+fn print(grid: &Grid) {
+    let min_row = grid
+        .keys()
+        .map(|(row, _)| row.clone())
+        .min()
+        .unwrap_or_default();
+    let min_col = grid
+        .keys()
+        .map(|(_, col)| col.clone())
+        .min()
+        .unwrap_or_default();
+    let max_row = grid
+        .keys()
+        .map(|(row, _)| row.clone())
+        .max()
+        .unwrap_or_default();
+    let max_col = grid
+        .keys()
+        .map(|(_, col)| col.clone())
+        .max()
+        .unwrap_or_default();
+
+    let g = (min_row..=max_row)
+        .map(|row| {
+            (min_col..=max_col)
+                .map(|col| {
+                    if let Some((_, state)) = grid.iter().find(|((r, c), _)| r == &row && c == &col)
+                    {
+                        match state {
+                            State::Dirt => '.',
+                            State::Hole(_) => '#',
+                            State::Inside => '#',
+                        }
+                    } else {
+                        '?'
+                    }
                 })
                 .collect::<String>()
         })
         .collect::<Vec<String>>();
 
     dbg!(g);
+}
+
+fn get_grid(instructions: Vec<(char, i32, String)>) -> Grid {
+    let mut row = 0;
+    let mut col = 0;
+
+    let mut grid = HashMap::new();
+
+    for (dir, len, color) in instructions {
+        match dir {
+            'R' => {
+                for c in col..=(col + len) {
+                    grid.insert((row, c), State::Hole(color.to_string()));
+                }
+
+                col += len
+            }
+            'D' => {
+                for r in row..=(row + len) {
+                    grid.insert((r, col), State::Hole(color.to_string()));
+                }
+
+                row += len
+            }
+            'L' => {
+                for c in (col - len)..=col {
+                    grid.insert((row, c), State::Hole(color.to_string()));
+                }
+
+                col -= len
+            }
+            'U' => {
+                for r in (row - len)..=row {
+                    grid.insert((r, col), State::Hole(color.to_string()));
+                }
+
+                row -= len
+            }
+            s => panic!("unexpected {s}"),
+        };
+    }
+
+    grid
+}
+
+fn fill(grid: &mut Grid, (row, col): (i32, i32)) {
+    let current = grid.entry((row, col)).or_insert(State::Dirt);
+
+    if let State::Dirt = current {
+        grid.insert((row, col), State::Inside);
+
+        fill(grid, (row + 1, col));
+        fill(grid, (row.checked_sub(1).unwrap_or(0), col));
+        fill(grid, (row, col + 1));
+        fill(grid, (row, col.checked_sub(1).unwrap_or(0)));
+    }
 }
 
 pub fn one() -> Option<String> {
@@ -58,84 +165,52 @@ pub fn one() -> Option<String> {
 }
 
 fn run_one() -> Option<String> {
-    let size = 800;
-    // let size = 100;
+    let mut grid = get_grid(parse1());
 
-    let mut grid: Vec<Vec<Tile>> = (0..size)
-        .map(|_| (0..size).map(|_| Tile::Dirt).collect())
-        .collect();
+    fill(&mut grid, (1, 1));
 
-    let mut row = size / 2;
-    let mut col = size / 2;
-
-    for (dir, len, color) in parse() {
-        match dir {
-            'R' => {
-                for c in col..=(col + len) {
-                    grid[row][c] = Tile::Hole(color.to_string());
-                }
-
-                col += len
-            }
-            'D' => {
-                for r in row..=(row + len) {
-                    grid[r][col] = Tile::Hole(color.to_string());
-                }
-
-                row += len
-            }
-            'L' => {
-                for c in (col - len)..=col {
-                    grid[row][c] = Tile::Hole(color.to_string());
-                }
-
-                col -= len
-            }
-            'U' => {
-                for r in (row - len)..=row {
-                    grid[r][col] = Tile::Hole(color.to_string());
-                }
-
-                row -= len
-            }
-            s => panic!("unexpected {s}"),
-        };
-    }
-    fill(&mut grid, (0, 0));
+    print(&grid);
 
     Some(
-        grid.iter()
-            .flat_map(|l| {
-                l.iter()
-                    .filter(|c| match c {
-                        Tile::Dirt => true,
-                        Tile::Hole(_) => true,
-                        Tile::Outside => false,
-                    })
-                    .collect::<Vec<&Tile>>()
+        grid.values()
+            .filter(|c| match c {
+                State::Dirt => false,
+                State::Hole(_) => true,
+                State::Inside => true,
             })
             .count()
             .to_string(),
     )
 }
 
-fn fill(grid: &mut Vec<Vec<Tile>>, (row, col): (usize, usize)) {
-    if let Tile::Dirt = grid
-        .get(row)
-        .unwrap_or(&vec![])
-        .get(col)
-        .unwrap_or(&Tile::Hole("".to_string()))
-    {
-        grid[row][col] = Tile::Outside;
-        fill(grid, (row + 1, col));
-        fill(grid, (row.checked_sub(1).unwrap_or(0), col));
-        fill(grid, (row, col + 1));
-        fill(grid, (row, col.checked_sub(1).unwrap_or(0)));
-    }
+pub fn two() -> Option<String> {
+    // Spawn thread with explicit stack size
+    let child = thread::Builder::new()
+        .stack_size(1024 * 1024 * 1024)
+        .spawn(run_two)
+        .unwrap();
+
+    // Wait for thread to join
+    child.join().unwrap()
 }
 
-pub fn two() -> Option<String> {
-    None
+fn run_two() -> Option<String> {
+    let mut grid = get_grid(parse2());
+
+    fill(&mut grid, (0, 0));
+
+    // print(&grid);
+
+    Some(
+        grid.values()
+            .filter(|c| match c {
+                State::Dirt => false,
+                State::Hole(_) => true,
+                State::Inside => true,
+            })
+            .count()
+            .to_string(),
+    )
 }
 
 mod tests {}
