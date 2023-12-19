@@ -71,6 +71,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "clap",
+ "iter-progress",
  "itertools",
  "num",
  "parse_int",
@@ -203,6 +204,12 @@ checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
 ]
+
+[[package]]
+name = "iter-progress"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97059d64dd4e3a8e16696f6c0be50c1d5da3a709983f39b73fd7f84f120c5cd4"
 
 [[package]]
 name = "itertools"
