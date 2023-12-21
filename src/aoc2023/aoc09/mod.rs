@@ -4,15 +4,15 @@ pub fn one() -> Option<String> {
     Some(
         INPUT
             .lines()
-            .map(|l| l.split(" ").filter_map(|l| l.parse::<i32>().ok()).collect())
+            .map(|l| l.split(" ").filter_map(|l| l.parse::<i64>().ok()).collect())
             .map(line)
-            .sum::<i32>()
+            .sum::<i64>()
             .to_string(),
     )
 }
 
-fn line(seq: Vec<i32>) -> i32 {
-    let mut sequences: Vec<Vec<i32>> = vec![seq];
+pub fn line(seq: Vec<i64>) -> i64 {
+    let mut sequences: Vec<Vec<i64>> = vec![seq];
 
     while sequences.last().unwrap().iter().any(|n| n != &0) {
         let new = sequences
@@ -24,6 +24,8 @@ fn line(seq: Vec<i32>) -> i32 {
 
         sequences.push(new);
     }
+
+    // dbg!(&sequences);
 
     sequences.last_mut().unwrap().push(0);
 
@@ -43,15 +45,15 @@ pub fn two() -> Option<String> {
             .lines()
             .map(|l| {
                 l.split(" ")
-                    .filter_map(|l| l.parse::<i32>().ok())
-                    .collect::<Vec<i32>>()
+                    .filter_map(|l| l.parse::<i64>().ok())
+                    .collect::<Vec<i64>>()
             })
             .map(|mut l| {
                 l.reverse();
                 l
             })
             .map(line)
-            .sum::<i32>()
+            .sum::<i64>()
             .to_string(),
     )
 }
