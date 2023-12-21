@@ -2,10 +2,11 @@ use std::collections::HashSet;
 
 use crate::aoc2023;
 
-static INPUT: &'static str = include_str!("./example");
+static INPUT: &'static str = include_str!("./input");
+static EXAMPLE: &'static str = include_str!("./example");
 
-fn parse() -> Vec<Vec<char>> {
-    INPUT.lines().map(|l| l.chars().collect()).collect()
+fn parse(input: &'static str) -> Vec<Vec<char>> {
+    input.lines().map(|l| l.chars().collect()).collect()
 }
 
 #[allow(dead_code)]
@@ -57,7 +58,7 @@ fn walk(grid: &Vec<Vec<char>>, steps: usize, finite: bool) -> usize {
 
     let mut pattern: Vec<i64> = Vec::new();
 
-    for step in 1..=steps {
+    for step in 0..steps {
         // print(&grid, &lots);
 
         let mut next = HashSet::new();
@@ -80,29 +81,33 @@ fn walk(grid: &Vec<Vec<char>>, steps: usize, finite: bool) -> usize {
             }
         }
 
-        if step % grid.len() == 0 {
+        if step % (grid.len()) == 0 {
             pattern.push(next.len() as i64);
 
             dbg!(&pattern);
 
-            let mut res: Vec<i64> = pattern.windows(2).skip(3).map(|w| w[1] - w[0]).collect();
-            // dbg!(&res);
-
-            res = res.windows(2).map(|w| w[1] - w[0]).collect();
-
-            // dbg!(&res);
+            let mut res: Vec<i64> = pattern.windows(2).map(|w| w[1] - w[0]).collect();
+            dbg!(&res);
 
             res = res.windows(2).map(|w| w[1] - w[0]).collect();
 
             dbg!(&res);
 
-            let input: Vec<i64> = pattern.iter().skip(3).cloned().collect();
-            if res.iter().filter(|s| s == &&0).count() > 3 {
+            res = res.windows(2).map(|w| w[1] - w[0]).collect();
+
+            dbg!(&res);
+
+            let zeroes = res.iter().filter(|s| s == &&0).count();
+            let nonzero = res.len() - zeroes;
+
+            println!("found zero in second diff {zeroes}:{nonzero}");
+
+            if zeroes >= 1 {
                 let mut curr = step;
 
-                while curr < steps {
-                    // dbg!(&pattern);
-
+                while curr < (steps - 65) {
+                    dbg!(curr, steps, curr as f32 / steps as f32);
+                    let input: Vec<i64> = pattern.iter().skip(nonzero).cloned().collect();
                     pattern.push(aoc2023::aoc09::line(input.clone()));
                     curr += grid.len();
 
@@ -121,6 +126,8 @@ fn walk(grid: &Vec<Vec<char>>, steps: usize, finite: bool) -> usize {
                 res = res.windows(2).map(|w| w[1] - w[0]).collect();
 
                 // dbg!(&res);
+                //
+                // pattern.remove(pattern.len() - 1);
 
                 return *pattern.last().unwrap() as usize;
 
@@ -139,14 +146,34 @@ fn walk(grid: &Vec<Vec<char>>, steps: usize, finite: bool) -> usize {
 }
 
 pub fn one() -> Option<String> {
-    Some(walk(&parse(), 64, true).to_string())
+    Some(walk(&parse(EXAMPLE), 64, true).to_string())
 }
 
 pub fn two() -> Option<String> {
-    Some(walk(&parse(), 500, false).to_string())
+    Some(walk(&parse(INPUT), 26501365, false).to_string())
 }
 
 mod tests {
+    #[test]
+    fn test_two() {
+        assert_eq!(16, super::walk(&super::parse(super::EXAMPLE), 6, false));
+        assert_eq!(50, super::walk(&super::parse(super::EXAMPLE), 10, false));
+        assert_eq!(1594, super::walk(&super::parse(super::EXAMPLE), 50, false));
+        assert_eq!(6536, super::walk(&super::parse(super::EXAMPLE), 100, false));
+        assert_eq!(
+            167004,
+            super::walk(&super::parse(super::EXAMPLE), 500, false)
+        );
+        assert_eq!(
+            668697,
+            super::walk(&super::parse(super::EXAMPLE), 1000, false)
+        );
+        assert_eq!(
+            16733044,
+            super::walk(&super::parse(super::EXAMPLE), 5000, false)
+        );
+    }
+
     #[test]
     fn test_clamp_to_size() {
         assert_eq!(0, super::clamp_to_size(-11, 11));
