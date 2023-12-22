@@ -1,7 +1,6 @@
-use itertools::Itertools;
 use std::{collections::HashMap, ops::Range};
 
-static INPUT: &'static str = include_str!("./example");
+static INPUT: &'static str = include_str!("./input");
 
 #[derive(Debug)]
 struct Part {
@@ -172,51 +171,6 @@ fn run_part(part: &Part, workflows: &HashMap<String, Workflow>) -> bool {
     }
 }
 
-// #[derive(Debug)]
-// struct AbstractPart {
-//     x: Vec<Condition>,
-//     m: Vec<Condition>,
-//     a: Vec<Condition>,
-//     s: Vec<Condition>,
-// }
-
-// fn run_abstract_part(part: &AbstractPart, workflows: &HashMap<String, Workflow>) {
-//     let mut current = "in".to_string();
-
-//     if let Some(wf) = workflows.get(&current) {
-//         for rule in &wf.rules {
-//             match rule {
-//                 Rule::Condition(Condition { attr, cmp, val }, next) => {
-//                     let attr_val = match attr {
-//                         'x' => part.x,
-//                         'm' => part.m,
-//                         'a' => part.a,
-//                         's' => part.s,
-//                         o => panic!("{o}"),
-//                     };
-
-//                     let res = match cmp {
-//                         Cmp::Lt => attr_val < *val,
-//                         Cmp::Gt => attr_val > *val,
-//                     };
-
-//                     if res {
-//                         current = next.to_string();
-//                         break;
-//                     } else {
-//                     }
-//                 }
-//                 Rule::Default(next) => {
-//                     current = next.to_string();
-//                     continue;
-//                 }
-//             }
-//         }
-//     } else {
-//         return current == 'A'.to_string();
-//     }
-// }
-
 pub fn one() -> Option<String> {
     let (workflows, parts) = parse();
 
@@ -236,9 +190,9 @@ fn run(current: &str, workflows: &HashMap<String, Workflow>, [x, m, a, s]: Xmas)
     if let Some(workflow) = workflows.get(current) {
         let mut res: Vec<Xmas> = Vec::new();
 
-        for r in &workflow.rules {
-            let (mut x, mut m, mut a, mut s) = (x.clone(), m.clone(), a.clone(), s.clone());
+        let (mut x, mut m, mut a, mut s) = (x.clone(), m.clone(), a.clone(), s.clone());
 
+        for r in &workflow.rules {
             if let Rule::Condition(Condition { attr, cmp, val }, next) = r {
                 match attr {
                     'x' => match cmp {
@@ -254,9 +208,9 @@ fn run(current: &str, workflows: &HashMap<String, Workflow>, [x, m, a, s]: Xmas)
                             res.append(&mut run(
                                 next,
                                 workflows,
-                                [*val..x.end, m.clone(), a.clone(), s.clone()],
+                                [*val + 1..x.end, m.clone(), a.clone(), s.clone()],
                             ));
-                            x.end = *val;
+                            x.end = *val + 1;
                         }
                     },
                     'm' => match cmp {
@@ -272,9 +226,9 @@ fn run(current: &str, workflows: &HashMap<String, Workflow>, [x, m, a, s]: Xmas)
                             res.append(&mut run(
                                 next,
                                 workflows,
-                                [x.clone(), *val..m.end, a.clone(), s.clone()],
+                                [x.clone(), *val + 1..m.end, a.clone(), s.clone()],
                             ));
-                            m.end = *val
+                            m.end = *val + 1;
                         }
                     },
                     'a' => match cmp {
@@ -290,9 +244,9 @@ fn run(current: &str, workflows: &HashMap<String, Workflow>, [x, m, a, s]: Xmas)
                             res.append(&mut run(
                                 next,
                                 workflows,
-                                [x.clone(), m.clone(), *val..a.end, s.clone()],
+                                [x.clone(), m.clone(), *val + 1..a.end, s.clone()],
                             ));
-                            a.end = *val
+                            a.end = *val + 1;
                         }
                     },
                     's' => match cmp {
@@ -308,9 +262,9 @@ fn run(current: &str, workflows: &HashMap<String, Workflow>, [x, m, a, s]: Xmas)
                             res.append(&mut run(
                                 next,
                                 workflows,
-                                [x.clone(), m.clone(), a.clone(), *val..s.end],
+                                [x.clone(), m.clone(), a.clone(), *val + 1..s.end],
                             ));
-                            s.end = *val
+                            s.end = *val + 1;
                         }
                     },
                     _ => panic!(),
@@ -318,7 +272,11 @@ fn run(current: &str, workflows: &HashMap<String, Workflow>, [x, m, a, s]: Xmas)
             }
 
             if let Rule::Default(next) = r {
-                res.append(&mut run(next, workflows, [x, m, a, s]))
+                res.append(&mut run(
+                    next,
+                    workflows,
+                    [x.clone(), m.clone(), a.clone(), s.clone()],
+                ))
             }
         }
 
@@ -330,117 +288,16 @@ fn run(current: &str, workflows: &HashMap<String, Workflow>, [x, m, a, s]: Xmas)
     }
 }
 
-fn overlaps(left: &Xmas, right: &Xmas) -> Option<Xmas> {
-    let mut res = [0..0, 0..0, 0..0, 0..0];
-
-    for (i, (l, r)) in left
-        .iter()
-        .zip(right.iter())
-        .map(|(l, r)| if l.end > r.end { (r, l) } else { (l, r) })
-        .enumerate()
-    {
-        // dbg!(i, l, r);
-
-        if l == r {
-            res[i] = l.clone();
-        } else {
-            res[i] = std::cmp::max(r.start, l.start)..std::cmp::min(r.end, l.end);
-        }
-
-        if res[i].is_empty() {
-            // dbg!("no overlap");
-            return None;
-        }
-    }
-    // dbg!(&res);
-
-    Some(res)
-}
-
 pub fn two() -> Option<String> {
     let (workflows, _) = parse();
 
-    let res = run("in", &workflows, [0..4000, 0..4000, 0..4000, 0..4000]);
-
-    let combinations: Vec<Vec<&Xmas>> = res.iter().combinations(2).collect();
-
-    dbg!(res.len(), combinations.len());
-
-    let overlaps = combinations
-        .into_iter()
-        .filter_map(|c| overlaps(&c[0], &c[1]))
-        .collect::<Vec<Xmas>>();
-
-    dbg!(&overlaps);
-
-    let over = overlaps
-        .iter()
-        .map(|x| x.iter().map(|r| r.len()).product::<usize>())
-        .sum::<usize>();
-
-    let res = res
-        .iter()
-        .map(|x| x.iter().map(|r| r.len()).product::<usize>())
-        .sum::<usize>();
-
-    dbg!(res, over, (res as f32 - over as f32) / 167409079868000.0);
-
-    dbg!(4000_i64 * 4000 * 4000 * 4000);
-
-    return Some((res - over).to_string());
-
-    // TODO: Some kind of symbolic execution?
-    //
-    //
-    // List of conditions that lead to A
-    // let conditions: Vec<Vec<Condition>> = conditions_to_a("in", &workflows, Vec::new());
-
-    // dbg!(conditions);
-
-    None
-}
-
-fn conditions_to_a(
-    workflow: &str,
-    workflows: &HashMap<String, Workflow>,
-    conditions: Vec<Condition>,
-) -> Vec<Vec<Condition>> {
-    dbg!(workflow);
-
-    if let Some(workflow) = workflows.get(workflow) {
-        let mut results = Vec::new();
-
-        for rule in &workflow.rules {
-            match rule {
-                Rule::Condition(_, n) => dbg!(n),
-                Rule::Default(n) => dbg!(n),
-            };
-
-            let mut res = match rule {
-                Rule::Condition(c, next) => conditions_to_a(next, workflows, vec![c.clone()]),
-                Rule::Default(next) => match next.as_str() {
-                    "A" => return vec![conditions],
-                    "R" => Vec::new(),
-                    name => conditions_to_a(name, workflows, Vec::new()),
-                },
-            };
-
-            res = res
-                .iter_mut()
-                .map(|cs| conditions.iter().chain(cs.iter()).cloned().collect())
-                .collect();
-
-            results.append(&mut res);
-        }
-
-        results
-    } else {
-        if workflow == "A" {
-            vec![conditions]
-        } else {
-            Vec::new()
-        }
-    }
+    Some(
+        run("in", &workflows, [1..4001, 1..4001, 1..4001, 1..4001])
+            .iter()
+            .map(|x| x.iter().map(|r| r.len()).product::<usize>())
+            .sum::<usize>()
+            .to_string(),
+    )
 }
 
 mod tests {}

@@ -1,5 +1,3 @@
-#![feature(iter_map_windows)]
-#![feature(result_option_inspect)]
 use chrono::Datelike;
 use clap::Parser;
 use std::time::{Duration, Instant};

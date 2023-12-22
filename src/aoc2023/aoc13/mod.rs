@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 static INPUT: &'static str = include_str!("./input");
 
 fn parse() -> Vec<Vec<Vec<char>>> {
@@ -27,9 +29,10 @@ fn find_reflection(pattern: &Vec<Vec<char>>) -> Option<usize> {
     let r = pattern
         .iter()
         .enumerate()
-        .map_windows(|[(i1, p1), (i2, p2)]| {
+        .tuple_windows()
+        .map(|((i1, p1), (i2, p2))| {
             if p1 == p2 {
-                for j in 0..*i1 {
+                for j in 0..i1 {
                     let empty = String::new();
                     let lft = pattern.get(j).unwrap_or(&empty);
                     let rgt = pattern.get(i1 + i2 - j).unwrap_or(&empty);
