@@ -9,6 +9,8 @@ struct Node {
     col: usize,
 }
 
+// TODO: use shoelace-formula with pick's theorem
+
 fn parse() -> (Node, HashMap<Node, Vec<Node>>) {
     let mut res = HashMap::new();
 
